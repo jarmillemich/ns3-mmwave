@@ -44,6 +44,7 @@
 #include <ns3/boolean.h>
 #include <ns3/integer.h>
 #include "mmwave-spectrum-value-helper.h"
+#include <valgrind/callgrind.h>
 
 namespace ns3 {
 
@@ -2764,7 +2765,9 @@ MmWave3gppChannel::UpdateChannel (Ptr<Params3gpp> params3gpp, Ptr<ParamsTable>  
   //std::cout << "  pt 5 in " << (float(clock()-start) / CLOCKS_PER_SEC) << std::endl;
   //double slotTime = Simulator::Now ().GetSeconds ();
   // The following for loops computes the channel coefficients
-  //#pragma omp parallel for
+  CALLGRIND_START_INSTRUMENTATION ;
+  CALLGRIND_TOGGLE_COLLECT;
+  #pragma omp parallel for
   for (uint64_t uIndex = 0; uIndex < uSize; uIndex++)
     {
       Vector uLoc = rxAntenna->GetAntennaLocation (uIndex,rxAntennaNum);
@@ -2912,6 +2915,8 @@ MmWave3gppChannel::UpdateChannel (Ptr<Params3gpp> params3gpp, Ptr<ParamsTable>  
             }
         }
     }
+
+  CALLGRIND_TOGGLE_COLLECT;
 
   //std::cout << "  pt 6 in " << (float(clock()-start) / CLOCKS_PER_SEC) << std::endl;
 

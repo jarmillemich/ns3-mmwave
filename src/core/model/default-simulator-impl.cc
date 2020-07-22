@@ -145,11 +145,24 @@ DefaultSimulatorImpl::ProcessOneEvent (void)
   m_eventCount++;
 
   NS_LOG_LOGIC ("handle " << next.key.m_ts);
+  
+  struct timespec start, finish;
+  clock_gettime(CLOCK_MONOTONIC, &start);
   m_currentTs = next.key.m_ts;
   m_currentContext = next.key.m_context;
   m_currentUid = next.key.m_uid;
   next.impl->Invoke ();
   next.impl->Unref ();
+
+  clock_gettime(CLOCK_MONOTONIC, &finish);
+  double elapsed = (finish.tv_sec - start.tv_sec);
+  elapsed += (finish.tv_nsec - start.tv_nsec) / 1e9;
+  if (elapsed > 0.1) {
+    std::cout << "evt at " << next.key.m_ts
+              << " calling " << next.impl
+              << " took " << elapsed
+              << std::endl;
+  }
 
   ProcessEventsWithContext ();
 }
