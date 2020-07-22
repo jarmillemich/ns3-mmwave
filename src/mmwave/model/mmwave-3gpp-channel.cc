@@ -321,8 +321,13 @@ MmWave3gppChannel::Initial (NetDeviceContainer ueDevices, NetDeviceContainer enb
 
   m_forceInitialBfComputation = true;
 
+  std::cout << "Channel setup" << std::endl;
+  const clock_t begin_time = clock();
+
   for (NetDeviceContainer::Iterator i = ueDevices.Begin (); i != ueDevices.End (); i++)
     {
+      std::cout << "  on device " << (i - ueDevices.Begin()) << std::endl;
+
       for (NetDeviceContainer::Iterator j = enbDevices.Begin (); j != enbDevices.End (); j++)
         {
           SetBeamformingVector (*i,*j);
@@ -384,6 +389,8 @@ MmWave3gppChannel::Initial (NetDeviceContainer ueDevices, NetDeviceContainer enb
 
     }
 
+  std::cout << "Channel setup done in " << float((clock() - begin_time) / 1000.0) << std::endl;
+
   m_forceInitialBfComputation = false;
 
 }
@@ -395,6 +402,8 @@ MmWave3gppChannel::DoCalcRxPowerSpectralDensity (Ptr<const SpectrumValue> txPsd,
                                                  Ptr<const MobilityModel> a,
                                                  Ptr<const MobilityModel> b) const
 {
+  //std::cout << "Calculating power density for " << (a->GetObject<Node>()->GetId()) << " to " << (b->GetObject<Node>()->GetId()) << std::endl;
+  
   NS_LOG_FUNCTION (this);
   Ptr<SpectrumValue> rxPsd = Copy (txPsd);
 
@@ -2328,6 +2337,8 @@ MmWave3gppChannel::UpdateChannel (Ptr<Params3gpp> params3gpp, Ptr<ParamsTable>  
                                   Ptr<AntennaArrayModel> txAntenna, Ptr<AntennaArrayModel> rxAntenna,
                                   uint16_t *txAntennaNum, uint16_t *rxAntennaNum, Angles &rxAngle, Angles &txAngle) const
 {
+  //clock_t start = clock();
+  
   Ptr<Params3gpp> params = params3gpp;
   uint8_t raysPerCluster = table3gpp->m_raysPerCluster;
   //We first update the current location, the previous location will be updated in the end.
@@ -2359,6 +2370,7 @@ MmWave3gppChannel::UpdateChannel (Ptr<Params3gpp> params3gpp, Ptr<ParamsTable>  
       clusterDelay.at (cIndex) -= (sin (params->m_angle.at (ZOA_INDEX).at (cIndex) * M_PI / 180) * cos (params->m_angle.at (AOA_INDEX).at (cIndex) * M_PI / 180) * params->m_speed.x
                                    + sin (params->m_angle.at (ZOA_INDEX).at (cIndex) * M_PI / 180) * sin (params->m_angle.at (AOA_INDEX).at (cIndex) * M_PI / 180) * params->m_speed.y) * m_updatePeriod.GetSeconds () / 3e8; //(7.6-9)
     }
+
 
   /* since the scaled Los delays are not to be used in cluster power generation,
    * we will generate cluster power first and resume to compute Los cluster delay later.*/
@@ -2489,7 +2501,7 @@ MmWave3gppChannel::UpdateChannel (Ptr<Params3gpp> params3gpp, Ptr<ParamsTable>  
         }
     }
 
-
+  
   double rayAoa_radian[params->m_numCluster][raysPerCluster];       //rayAoa_radian[n][m], where n is cluster index, m is ray index
   double rayAod_radian[params->m_numCluster][raysPerCluster];       //rayAod_radian[n][m], where n is cluster index, m is ray index
   double rayZoa_radian[params->m_numCluster][raysPerCluster];       //rayZoa_radian[n][m], where n is cluster index, m is ray index
@@ -2565,6 +2577,7 @@ MmWave3gppChannel::UpdateChannel (Ptr<Params3gpp> params3gpp, Ptr<ParamsTable>  
           rayZod_radian[nInd][mInd] = tempZod * M_PI / 180;
         }
     }
+
 
   doubleVector_t angle_degree;
   double sizeTemp = clusterZoa.size ();
@@ -2732,6 +2745,7 @@ MmWave3gppChannel::UpdateChannel (Ptr<Params3gpp> params3gpp, Ptr<ParamsTable>  
         }
     }
 
+
   NS_LOG_INFO ("1st strongest cluster:" << (int)cluster1st << ", 2nd strongest cluster:" << (int)cluster2nd);
 
   complex3DVector_t H_usn;       //channel coffecient H_usn[u][s][n];
@@ -2746,8 +2760,11 @@ MmWave3gppChannel::UpdateChannel (Ptr<Params3gpp> params3gpp, Ptr<ParamsTable>  
           H_usn.at (uIndex).at (sIndex).resize (params->m_numCluster);
         }
     }
+  
+  //std::cout << "  pt 5 in " << (float(clock()-start) / CLOCKS_PER_SEC) << std::endl;
   //double slotTime = Simulator::Now ().GetSeconds ();
   // The following for loops computes the channel coefficients
+  //#pragma omp parallel for
   for (uint64_t uIndex = 0; uIndex < uSize; uIndex++)
     {
       Vector uLoc = rxAntenna->GetAntennaLocation (uIndex,rxAntennaNum);
@@ -2896,6 +2913,8 @@ MmWave3gppChannel::UpdateChannel (Ptr<Params3gpp> params3gpp, Ptr<ParamsTable>  
         }
     }
 
+  //std::cout << "  pt 6 in " << (float(clock()-start) / CLOCKS_PER_SEC) << std::endl;
+
   if (cluster1st == cluster2nd)
     {
       clusterDelay.push_back (clusterDelay.at (cluster2nd) + 1.28 * table3gpp->m_cDS);
@@ -2938,6 +2957,8 @@ MmWave3gppChannel::UpdateChannel (Ptr<Params3gpp> params3gpp, Ptr<ParamsTable>  
     }
 
   NS_LOG_INFO ("size of coefficient matrix =[" << H_usn.size () << "][" << H_usn.at (0).size () << "][" << H_usn.at (0).at (0).size () << "]");
+
+  //std::cout << "  Finished channel in " << (float(clock()-start) / CLOCKS_PER_SEC) << std::endl;
 
 
   /*std::cout << "Delay:";
