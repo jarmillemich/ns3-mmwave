@@ -377,6 +377,10 @@ def configure(conf):
 
     if Options.options.build_profile == 'optimized':
         env.append_value('DEFINES', 'NS3_BUILD_PROFILE_OPTIMIZED')
+        env.append_value('CXXFLAGS', '-fopenmp')
+        env.append_value('CXXFLAGS', '-ftree-parallelize-loops=4')
+        env.append_value('LINKFLAGS', '-fopenmp')
+        env.append_value('LINKFLAGS', '-ftree-parallelize-loops=4')
 
     env['PLATFORM'] = sys.platform
     env['BUILD_PROFILE'] = Options.options.build_profile
