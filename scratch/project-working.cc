@@ -516,7 +516,6 @@ void useClusterMobility() {
         // Proceed along the street
         "PositionAllocator", PointerValue(xGroupAllocator)
       );
-    xClusterMobility->SetPositionAllocator(xGroupAllocator);
     xClusterMobility->SetPosition(Vector(startInline, pathMid, 0));
   }
 
@@ -536,7 +535,6 @@ void useClusterMobility() {
         // Proceed along the street
         "PositionAllocator", PointerValue(yGroupAllocator)
       );
-    yClusterMobility->SetPositionAllocator(yGroupAllocator);
     yClusterMobility->SetPosition(Vector(pathMid, startInline, 0));
   }
 }
@@ -646,6 +644,8 @@ NodeContainer useDroneENB() {
 }
 
 int main(int argc, char **argv) {
+  NodeContainer ueNodes, enbNodes;
+
   try {
    
     CommandLine cmd;
@@ -679,11 +679,10 @@ int main(int argc, char **argv) {
 
     // Create the four blocks
     BuildingContainer buildings = generateManhattanGrid(2, 2);
-    NodeContainer enbNodes = usePoleMountedENB();
+    enbNodes.Add(usePoleMountedENB());
     
 
     // Set up scenario specific objects
-    NodeContainer ueNodes;
     if (scenario == 1) {
       ueNodes.Add(useDistributedUE());
     } else if (scenario == 2) {
@@ -740,6 +739,8 @@ int main(int argc, char **argv) {
     Simulator::Destroy();
     return 0;
   } catch (std::exception& e) {
+    std::cout << "emergency save positions" << std::endl;
+    LogAllUeLocations(mobilityOs, &ueNodes, &enbNodes);
     std::cerr << e.what() << std::endl;
     throw;
   }
