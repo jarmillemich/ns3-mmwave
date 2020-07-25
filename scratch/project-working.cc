@@ -457,7 +457,7 @@ NodeContainer useDistributedUE() {
 
   xStreetMob.SetMobilityModel("ns3::RandomWaypointMobilityModel",
     // How long to wait initially and at waypoints
-    "Pause", StringValue("ns3::ConstantRandomVariable[Constant=0.2]"),
+    "Pause", StringValue("ns3::ConstantRandomVariable[Constant=0.002]"),
     // Table I: Speed = 5 km/h ~= 1.4 m/s
     "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.4]"),
     // Hopefully stay on the streets?
@@ -516,6 +516,7 @@ void useClusterMobility() {
         // Proceed along the street
         "PositionAllocator", PointerValue(xGroupAllocator)
       );
+    xClusterMobility->SetPositionAllocator(xGroupAllocator);
     xClusterMobility->SetPosition(Vector(startInline, pathMid, 0));
   }
 
@@ -535,6 +536,7 @@ void useClusterMobility() {
         // Proceed along the street
         "PositionAllocator", PointerValue(yGroupAllocator)
       );
+    yClusterMobility->SetPositionAllocator(yGroupAllocator);
     yClusterMobility->SetPosition(Vector(pathMid, startInline, 0));
   }
 }
