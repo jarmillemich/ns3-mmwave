@@ -83,7 +83,7 @@ static ns3::GlobalValue g_outPath ("outPath",
 static ns3::GlobalValue g_runNumber ("runNumber", "Run number for rng",
                                      ns3::UintegerValue (10), ns3::MakeUintegerChecker<uint32_t> ());
 static ns3::GlobalValue g_scenario ("scenario", "Scenario to use",
-                                     ns3::UintegerValue (3), ns3::MakeUintegerChecker<uint32_t> ());
+                                     ns3::UintegerValue (2), ns3::MakeUintegerChecker<uint32_t> ());
 
 
 static ofstream *mobilityOs;
@@ -491,7 +491,9 @@ double
   // Start a street radius from the end
   startInline = 7.5,
   // End the distance travelled at 5 km/h in 85 seconds (see Table 1)
-  endInline = 7.5 + 5000 / 3600 * 85;
+  //endInline = 7.5 + 5000 / 3600 * 85;
+  // Actually just keep going, it'll stop after the sim is over
+  endInline = 165 - 7.5;
 
 /** 
  * Initialize the cluster mobility model globals,
@@ -501,14 +503,14 @@ void useClusterMobility() {
   if (xClusterMobility == nullptr) {
     Ptr<ListPositionAllocator> xGroupAllocator = CreateObject<ListPositionAllocator>();
 
-    //xGroupAllocator->Add(Vector(startInline, pathMid, 0));
+    xGroupAllocator->Add(Vector(startInline, pathMid, 0));
     xGroupAllocator->Add(Vector(endInline, pathMid, 0));
 
     // Group reference mobility, follows a point moving down the street
     xClusterMobility =
       CreateObjectWithAttributes<RandomWaypointMobilityModel>(
         // How long to wait initially and at waypoints
-        "Pause", StringValue("ns3::ConstantRandomVariable[Constant=0.2]"),
+        "Pause", StringValue("ns3::ConstantRandomVariable[Constant=0.01]"),
         // Table I: Speed = 5 km/h ~= 1.4 m/s
         "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.4]"),
         // Proceed along the street
@@ -520,7 +522,7 @@ void useClusterMobility() {
   if (yClusterMobility == nullptr) {
     Ptr<ListPositionAllocator> yGroupAllocator = CreateObject<ListPositionAllocator>();
 
-    //yGroupAllocator->Add(Vector(pathMid, startInline, 0));
+    yGroupAllocator->Add(Vector(pathMid, startInline, 0));
     yGroupAllocator->Add(Vector(pathMid, endInline, 0));
 
     // Group reference mobility, follows a point moving down the street
