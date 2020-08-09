@@ -461,8 +461,8 @@ NodeContainer useDroneENB() {
 
   // Paper doesn't really specify the drone height
   // We'll take it to be the same as the infrastructure height
-  xMobility->SetPosition(xClusterMobility->GetPosition() + Vector(0, 0, 3.0));
-  yMobility->SetPosition(yClusterMobility->GetPosition() + Vector(0, 0, 3.0));
+  xMobility->SetPosition(xClusterMobility->GetPosition() + Vector(0, 0, 13.0));
+  yMobility->SetPosition(yClusterMobility->GetPosition() + Vector(0, 0, 13.0));
 
   // Add in mobility models following cluster centers
   drones.Get(0)->AggregateObject(xMobility);
@@ -492,7 +492,7 @@ static ns3::GlobalValue g_bufferSize ("bufferSize", "RLC tx buffer size (MB)",
                                       ns3::UintegerValue (20), ns3::MakeUintegerChecker<uint32_t> ());
 // Taking to match the Table 1: PGW and remote host link delay = 10ms
 static ns3::GlobalValue g_x2Latency ("x2Latency", "Latency on X2 interface (us)",
-                                     ns3::DoubleValue (10000), ns3::MakeDoubleChecker<double> ());
+                                     ns3::DoubleValue (500), ns3::MakeDoubleChecker<double> ());
 static ns3::GlobalValue g_mmeLatency ("mmeLatency", "Latency on MME interface (us)",
                                       ns3::DoubleValue (10000), ns3::MakeDoubleChecker<double> ());
 static ns3::GlobalValue g_rlcAmEnabled ("rlcAmEnabled", "If true, use RLC AM, else use RLC UM",
@@ -517,6 +517,10 @@ static ns3::GlobalValue g_lteUplink ("lteUplink", "If true, always use LTE for u
 int
 main (int argc, char *argv[])
 {
+  // Debugging things
+  Packet::EnablePrinting();
+//  Packet::EnableChecking();
+
   bool harqEnabled = true;
   bool fixedTti = false;
   unsigned symPerSf = 24;
@@ -667,10 +671,10 @@ main (int argc, char *argv[])
 
   // handover and RT related params
   // Hard handover on 3 dB advantage
-  Config::SetDefault ("ns3::LteEnbRrc::SecondaryCellHandoverMode", EnumValue (LteEnbRrc::DYNAMIC_TTT));
+  Config::SetDefault ("ns3::LteEnbRrc::SecondaryCellHandoverMode", EnumValue (LteEnbRrc::THRESHOLD));
   Config::SetDefault ("ns3::LteEnbRrc::HoSinrDifference", DoubleValue(3.0));
 
-  Config::SetDefault ("ns3::LteEnbRrc::FixedTttValue", UintegerValue (150));
+  Config::SetDefault ("ns3::LteEnbRrc::FixedTttValue", UintegerValue (250));
   Config::SetDefault ("ns3::LteEnbRrc::CrtPeriod", IntegerValue (ReportTablePeriodicity));
   Config::SetDefault ("ns3::LteEnbRrc::OutageThreshold", DoubleValue (outageTh));
   Config::SetDefault ("ns3::MmWaveEnbPhy::UpdateSinrEstimatePeriod", IntegerValue (ReportTablePeriodicity));
@@ -846,8 +850,8 @@ main (int argc, char *argv[])
     }
 
   // Start applications
-  serverApps.Start (Seconds (0));
-  clientApps.Start (Seconds (0));
+  serverApps.Start (Seconds (0.005));
+  clientApps.Start (Seconds (0.005));
 
   LogAllUeLocations(mobilityOs, &ueNodes, &mmWaveEnbNodes);
 
